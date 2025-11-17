@@ -84,7 +84,7 @@ class RainmakerAPI:
             
         try:
             _LOGGER.debug("Fetching nodes from Rainmaker API...")
-            data = await self._client.async_get_nodes(node_detail=True)
+            data = await self._client.async_get_nodes(node_details=True)
             _LOGGER.debug("Successfully fetched nodes data")
         except Exception as err:
             _LOGGER.error("Failed to fetch nodes: %s (type: %s)", err, type(err).__name__)
