@@ -131,19 +131,28 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
             )
         super()._handle_coordinator_update()
 
-    @cached_property
+    @property
     def fan_modes(self) -> list[str] | None:
-        return ["level_0", "level_1", "level_2", "level_3"]
+        node_data = self.coordinator.data.get(self._node_id, {})
+        if "fan_speed" not in node_data:
+            return None
+        # Get bounds from metadata to determine available levels
+        bounds = node_data["fan_speed"].get("bounds", {})
+        max_level = bounds.get("max", 3)
+        return ["Off", "Low", "Medium", "High"][:int(max_level) + 1]
 
-    @cached_property
+    @property
     def fan_mode(self) -> str | None:
         node_data = self.coordinator.data.get(self._node_id, {})
-        for param, meta in node_data.items():
-            if param.lower() == "fan_speed":
-                val = meta.get("value")
-                if val is None:
-                    return None
-                return f"level_{int(val)}"
+        if "fan_speed" not in node_data:
+            return None
+        val = node_data["fan_speed"].get("value")
+        if val is None:
+            return None
+        level = int(val)
+        fan_names = ["Off", "Low", "Medium", "High"]
+        if 0 <= level < len(fan_names):
+            return fan_names[level]
         return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -180,11 +189,14 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         try:
-            if not fan_mode.startswith("level_"):
+            # Map friendly names to numeric values
+            fan_map = {"Away": 0, "Low": 1, "Medium": 2, "High": 3}
+            if fan_mode not in fan_map:
+                _LOGGER.warning("Unknown fan mode: %s", fan_mode)
                 return
-            level = int(fan_mode.split("_", 1)[1])
+            level = fan_map[fan_mode]
             await self.coordinator.api.async_set_param(
-                self._node_id, "fan_speed", int(level)
+                self._node_id, "fan_speed", level
             )
             await self.coordinator.async_request_refresh()
         except Exception:  # pragma: no cover - runtime dependent

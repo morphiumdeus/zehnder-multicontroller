@@ -27,6 +27,7 @@ class RainmakerParamNumber(CoordinatorEntity, NumberEntity):
         node_id: str,
         node_name: str,
         param: str,
+        bounds: dict | None = None,
     ) -> None:
         super().__init__(coordinator)
         self._entry_id = entry_id
@@ -35,9 +36,12 @@ class RainmakerParamNumber(CoordinatorEntity, NumberEntity):
         self._param = param
         self._attr_name = f"{node_name} {param}"
         self._unique_id = f"{entry_id}_{node_id}_{param}"
-        self._attr_min_value = None
-        self._attr_max_value = None
-        self._attr_step = None
+        
+        # Set bounds from metadata
+        if bounds and isinstance(bounds, dict):
+            self._attr_native_min_value = bounds.get("min")
+            self._attr_native_max_value = bounds.get("max")
+            self._attr_native_step = bounds.get("step", 1)
 
     @cached_property
     def name(self) -> str | None:
@@ -90,16 +94,14 @@ async def async_setup_entry(
     for node_id, params in coordinator.data.items():
         node_name = params.get("Name", {}).get("value", node_id)
         for param, meta in params.items():
+            # Skip schedules, config, and Name parameters
+            if param == "Name" or param == "config" or "schedule" in param.lower():
+                continue
             if "write" in meta.get("properties", []) and meta.get("data_type") != "bool":
-                entity = RainmakerParamNumber(coordinator, entry.entry_id, node_id, node_name, param)
-
-                # populate number ranges from metadata if present
-                bounds = meta.get("bounds", {})
-                if isinstance(bounds, dict):
-                    entity._attr_min_value = bounds.get("min")
-                    entity._attr_max_value = bounds.get("max")
-                    entity._attr_step = bounds.get("step")
-
+                bounds = meta.get("bounds")
+                entity = RainmakerParamNumber(
+                    coordinator, entry.entry_id, node_id, node_name, param, bounds
+                )
                 entities.append(entity)
 
     async_add_entities(entities, True)

@@ -98,6 +98,9 @@ async def async_setup_entry(
     for node_id, params in coordinator.data.items():
         node_name = params.get("Name", {}).get("value", node_id)
         for param, meta in params.items():
+            # Skip schedules, config, and Name parameters
+            if param == "Name" or param == "config" or "schedule" in param.lower():
+                continue
             if meta.get("data_type") == "bool" and "write" in meta.get("properties", []):
                 entity = RainmakerParamSwitch(coordinator, entry.entry_id, node_id, node_name, param)
                 entities.append(entity)
