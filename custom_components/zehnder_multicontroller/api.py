@@ -61,29 +61,40 @@ class RainmakerAPI:
     async def async_connect(self) -> None:
         """Authenticate against Rainmaker using the PyPI client."""
         try:
+            _LOGGER.debug("Initializing RainmakerClient with host: %s", self.host)
             client = RainmakerClient(self.host)
             self._client = client
+            _LOGGER.debug("Attempting login with username: %s", self.username)
             await client.async_login(self.username, self.password)
         except ClientError as err:
-            _LOGGER.debug("Network error during rainmaker login: %s", err)
+            _LOGGER.error("Network error during rainmaker login: %s", err)
             raise RainmakerConnectionError("Network error") from err
         except Exception as err:
-            _LOGGER.debug("Authentication/login failed: %s", err)
+            _LOGGER.error("Authentication/login failed: %s (type: %s)", err, type(err).__name__)
             raise RainmakerAuthError("Authentication failed") from err
 
         self._connected = True
-        _LOGGER.debug("Rainmaker HTTP client login successful (host=%s)", self.host)
+        _LOGGER.info("Rainmaker HTTP client login successful (host=%s)", self.host)
 
     async def async_get_nodes(self) -> dict[str, Any]:
         """Return a list of normalized nodes with params and params_meta."""
+        if not self._client:
+            _LOGGER.error("Client not initialized")
+            raise RainmakerConnectionError("Client not initialized")
+            
         try:
-            assert self._client is not None
+            _LOGGER.debug("Fetching nodes from Rainmaker API...")
             data = await self._client.async_get_nodes(node_detail=True)
+            _LOGGER.debug("Successfully fetched nodes data")
         except Exception as err:
-            _LOGGER.debug("Failed to fetch nodes: %s", err)
-            raise RainmakerConnectionError("Failed to fetch nodes") from err
+            _LOGGER.error("Failed to fetch nodes: %s (type: %s)", err, type(err).__name__)
+            raise RainmakerConnectionError(f"Failed to fetch nodes: {err}") from err
+            
         if "node_details" not in data:
+            _LOGGER.error("API response missing node_details. Keys present: %s", list(data.keys()) if isinstance(data, dict) else type(data))
             raise RainmakerError(f"Wrong data format for nodes: {data}")
+            
+        _LOGGER.debug("Found %d node(s) in response", len(data.get("node_details", [])))
         return data
 
     async def async_set_param(self, node_id: str, param: str, value: Any) -> None:
