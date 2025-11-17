@@ -1,0 +1,13 @@
+{
+  "_checkout": null,
+  "_output_dir": "C:\\Users\\oliver\\rainmaker",
+  "_repo_dir": "C:\\Users\\oliver\\.cookiecutters\\cookiecutter-homeassistant-custom-component",
+  "_template": "gh:oncleben31/cookiecutter-homeassistant-custom-component",
+  "class_name_prefix": "ZehnderMulticontroller",
+  "domain_name": "zehnder_multicontroller",
+  "friendly_name": "Zehnder Multicontroller",
+  "github_user": "morphiumdeus",
+  "project_name": "zehnder-multicontroller",
+  "test_suite": "yes",
+  "version": "0.0.0"
+}

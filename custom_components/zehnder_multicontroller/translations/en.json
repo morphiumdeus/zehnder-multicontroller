@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Zehnder Multicontroller",
+        "description": "If you need help with the configuration have a look here: https://github.com/morphiumdeus/zehnder-multicontroller",
+        "data": {
+          "host": "Rainmaker API Host",
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "auth": "Username/Password is wrong.",
+      "cannot_connect": "Unable to connect to the Rainmaker API.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This account is already configured."
+    }
+  }
+}
