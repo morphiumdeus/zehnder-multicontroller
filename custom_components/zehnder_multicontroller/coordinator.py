@@ -74,5 +74,5 @@ class RainmakerCoordinator(DataUpdateCoordinator):
                 
         if not nodes_dict:
             raise UpdateFailed("No valid nodes found in API response")
-            
+        
         return nodes_dict

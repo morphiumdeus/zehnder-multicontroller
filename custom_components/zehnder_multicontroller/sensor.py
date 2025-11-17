@@ -24,13 +24,15 @@ class RainmakerParamSensor(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
         entry_id: str,
         node_id: str,
+        node_name: str,
         param: str,
     ) -> None:
         super().__init__(coordinator)
         self._entry_id = entry_id
         self._node_id = node_id
+        self._node_name = node_name
         self._param = param
-        self._attr_name = f"{node_id} {param}"
+        self._attr_name = f"{node_name} {param}"
         self._unique_id = f"{entry_id}_{node_id}_{param}"
 
     @cached_property
@@ -50,7 +52,7 @@ class RainmakerParamSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo | None:
         return DeviceInfo(
             identifiers={(DOMAIN, self._node_id)},
-            name=self._node_id,
+            name=self._node_name,
             manufacturer="ESP RainMaker",
         )
 
@@ -67,10 +69,11 @@ async def async_setup_entry(
 
     entities: list[RainmakerParamSensor] = []
     for node_id, params in coordinator.data.items():
+        node_name = params.get("Name", {}).get("value", node_id)
         for param, meta in params.items():
             dtype = meta.get("data_type", "").lower()
             if dtype not in ("bool", "int", "float", "number"):
-                entity = RainmakerParamSensor(coordinator, entry.entry_id, node_id, param)
+                entity = RainmakerParamSensor(coordinator, entry.entry_id, node_id, node_name, param)
                 # Attach simple metadata-driven attributes
                 if "temp" in param.lower():
                     entity._attr_native_unit_of_measurement = "°C"

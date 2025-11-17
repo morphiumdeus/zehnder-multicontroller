@@ -25,13 +25,15 @@ class RainmakerParamNumber(CoordinatorEntity, NumberEntity):
         coordinator: DataUpdateCoordinator,
         entry_id: str,
         node_id: str,
+        node_name: str,
         param: str,
     ) -> None:
         super().__init__(coordinator)
         self._entry_id = entry_id
         self._node_id = node_id
+        self._node_name = node_name
         self._param = param
-        self._attr_name = f"{node_id} {param}"
+        self._attr_name = f"{node_name} {param}"
         self._unique_id = f"{entry_id}_{node_id}_{param}"
         self._attr_min_value = None
         self._attr_max_value = None
@@ -54,7 +56,7 @@ class RainmakerParamNumber(CoordinatorEntity, NumberEntity):
     def device_info(self) -> DeviceInfo | None:
         return DeviceInfo(
             identifiers={(DOMAIN, self._node_id)},
-            name=self._node_id,
+            name=self._node_name,
             manufacturer="ESP RainMaker",
         )
 
@@ -86,9 +88,10 @@ async def async_setup_entry(
 
     entities: list[RainmakerParamNumber] = []
     for node_id, params in coordinator.data.items():
+        node_name = params.get("Name", {}).get("value", node_id)
         for param, meta in params.items():
             if "write" in meta.get("properties", []) and meta.get("data_type") != "bool":
-                entity = RainmakerParamNumber(coordinator, entry.entry_id, node_id, param)
+                entity = RainmakerParamNumber(coordinator, entry.entry_id, node_id, node_name, param)
 
                 # populate number ranges from metadata if present
                 bounds = meta.get("bounds", {})

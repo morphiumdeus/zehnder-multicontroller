@@ -27,11 +27,13 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
         coordinator: DataUpdateCoordinator,
         entry_id: str,
         node_id: str,
+        node_name: str,
     ) -> None:
         super().__init__(coordinator)
         self._entry_id = entry_id
         self._node_id = node_id
-        self._attr_name = node_id
+        self._node_name = node_name
+        self._attr_name = node_name
         self._unique_id = f"{entry_id}_{node_id}_climate"
 
         try:
@@ -57,7 +59,7 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
     def device_info(self) -> DeviceInfo | None:
         return DeviceInfo(
             identifiers={(DOMAIN, self._node_id)},
-            name=self._attr_name,
+            name=self._node_name,
             manufacturer="ESP RainMaker",
         )
 
@@ -216,7 +218,8 @@ async def async_setup_entry(
             )
             continue
 
-        entities.append(ZehnderClimate(coordinator, entry.entry_id, node_id))
+        node_name = params.get("Name", {}).get("value", node_id)
+        entities.append(ZehnderClimate(coordinator, entry.entry_id, node_id, node_name))
 
     _LOGGER.debug("Adding %s climate entities", len(entities))
     async_add_entities(entities, True)
