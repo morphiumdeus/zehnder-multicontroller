@@ -1,7 +1,7 @@
 {
   "domain": "zehnder_multicontroller",
   "name": "Zehnder Multicontroller",
-  "version": "0.0.6",
+  "version": "0.0.9",
   "documentation": "https://github.com/morphiumdeus/zehnder-multicontroller",
   "issue_tracker": "https://github.com/morphiumdeus/zehnder-multicontroller/issues",
   "dependencies": [],

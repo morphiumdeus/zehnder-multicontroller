@@ -18,6 +18,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     Creates the API object, data coordinator and forwards platform setups.
     """
+    _LOGGER.info("Setting up Zehnder Multicontroller integration for entry %s", entry.entry_id)
+    
     data = entry.data
     host = data.get("host")
     username = data.get("username")
@@ -31,14 +33,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api = RainmakerAPI(hass, host, username, password)
     try:
+        _LOGGER.debug("Attempting to connect to Rainmaker API...")
         await api.async_connect()
+        _LOGGER.info("Successfully connected to Rainmaker API")
     except Exception as err:
-        _LOGGER.debug("Failed to connect to Rainmaker: %s", err)
+        _LOGGER.error("Failed to connect to Rainmaker: %s", err)
         raise ConfigEntryNotReady from err
 
     coordinator = RainmakerCoordinator(hass, api, entry)
     # Fetch initial data so platforms have data when they are first added
+    _LOGGER.debug("Fetching initial data from coordinator...")
     await coordinator.async_config_entry_first_refresh()
+    _LOGGER.debug("Initial data fetched: %d nodes found", len(coordinator.data))
 
     # Store runtime-only references
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
@@ -46,7 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "coordinator": coordinator,
     }
 
+    _LOGGER.info("Forwarding setup to platforms: %s", PLATFORMS)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _LOGGER.info("Platform setup completed for entry %s", entry.entry_id)
 
     return True
 

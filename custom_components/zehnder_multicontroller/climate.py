@@ -223,18 +223,27 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
+    _LOGGER.info("Setting up climate platform for entry %s", entry.entry_id)
+    
     entry_data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
     if not entry_data:
-        _LOGGER.debug(
+        _LOGGER.error(
             "No entry data found for %s, aborting climate setup", entry.entry_id
         )
         return
+    
     coordinator = entry_data["coordinator"]
+    _LOGGER.debug("Coordinator data contains %d nodes", len(coordinator.data))
 
     entities: list[ZehnderClimate] = []
     registry = er.async_get(hass)
+    
     for node_id, params in coordinator.data.items():
+        _LOGGER.debug("Checking node %s for climate entity creation", node_id)
+        _LOGGER.debug("Node %s params: %s", node_id, list(params.keys()))
+        
         if "temp" not in params:
+            _LOGGER.debug("Node %s does not have 'temp' parameter, skipping", node_id)
             continue
 
         unique_id = f"{entry.entry_id}_{node_id}_climate"
@@ -248,7 +257,9 @@ async def async_setup_entry(
             continue
 
         node_name = params.get("Name", {}).get("value", node_id)
+        _LOGGER.info("Creating climate entity for node %s (name: %s)", node_id, node_name)
         entities.append(ZehnderClimate(coordinator, entry.entry_id, node_id, node_name))
 
-    _LOGGER.debug("Adding %s climate entities", len(entities))
+    _LOGGER.info("Adding %d climate entities", len(entities))
     async_add_entities(entities, True)
+    _LOGGER.info("Climate platform setup completed")
