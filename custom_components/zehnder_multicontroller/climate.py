@@ -20,6 +20,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_FAN_NAMES = ["Away", "Low", "Medium", "High"]
 
 class ZehnderClimate(CoordinatorEntity, ClimateEntity):
     def __init__(
@@ -41,11 +42,35 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
         except AttributeError:
             self._attr_temperature_unit = "°C"
 
+        # Initialize fan names based on fan_speed bounds
+        self._fan_names = self._initialize_fan_names()
+
         _LOGGER.debug(
-            "Creating ZehnderClimate for node %s", node_id
+            "Creating ZehnderClimate for node %s with fan names: %s", node_id, self._fan_names
         )
 
         self._attr_supported_features = self.get_supported_features()
+
+    def _initialize_fan_names(self) -> list[str]:
+        """Initialize fan mode names based on fan_speed bounds."""
+        node_data = self.coordinator.data.get(self._node_id, {})
+        
+        if "fan_speed" not in node_data:
+            return DEFAULT_FAN_NAMES
+        
+        bounds = node_data["fan_speed"].get("bounds", {})
+        min_val = bounds.get("min", 0)
+        max_val = bounds.get("max", 3)
+        
+        # Calculate number of levels
+        num_levels = int(max_val - min_val) + 1
+        
+        # Check if default names match the number of levels
+        if num_levels == len(DEFAULT_FAN_NAMES):
+            return DEFAULT_FAN_NAMES
+        
+        # Generate numeric names if counts don't match
+        return [str(i) for i in range(min_val, max_val + 1)]
 
     @cached_property
     def unique_id(self) -> str | None:
@@ -133,13 +158,7 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
 
     @property
     def fan_modes(self) -> list[str] | None:
-        node_data = self.coordinator.data.get(self._node_id, {})
-        if "fan_speed" not in node_data:
-            return None
-        # Get bounds from metadata to determine available levels
-        bounds = node_data["fan_speed"].get("bounds", {})
-        max_level = bounds.get("max", 3)
-        return ["Off", "Low", "Medium", "High"][:int(max_level) + 1]
+        return self._fan_names
 
     @property
     def fan_mode(self) -> str | None:
@@ -150,9 +169,9 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
         if val is None:
             return None
         level = int(val)
-        fan_names = ["Off", "Low", "Medium", "High"]
-        if 0 <= level < len(fan_names):
-            return fan_names[level]
+        
+        if 0 <= level < len(self._fan_names):
+            return self._fan_names[level]
         return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -189,12 +208,10 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         try:
-            # Map friendly names to numeric values
-            fan_map = {"Away": 0, "Low": 1, "Medium": 2, "High": 3}
-            if fan_mode not in fan_map:
+            if fan_mode not in self._fan_names:
                 _LOGGER.warning("Unknown fan mode: %s", fan_mode)
                 return
-            level = fan_map[fan_mode]
+            level = self._fan_names.index(fan_mode)
             await self.coordinator.api.async_set_param(
                 self._node_id, "fan_speed", level
             )
