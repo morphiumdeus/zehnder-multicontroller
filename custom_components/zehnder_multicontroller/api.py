@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import ClientError
 from rainmaker_http.client import RainmakerClient
@@ -58,6 +58,9 @@ class RainmakerAPI:
             ) as err:  # pragma: no cover - defensive cleanup
                 _LOGGER.debug("Error closing rainmaker_http client: %s", err)
 
+        self._client = None
+        self._connected = False
+
     async def async_connect(self) -> None:
         """Authenticate against Rainmaker using the PyPI client."""
         try:
@@ -76,20 +79,48 @@ class RainmakerAPI:
         self._connected = True
         _LOGGER.info("Rainmaker HTTP client login successful (host=%s)", self.host)
 
+    async def _ensure_connection(self) -> None:
+        if self._client is None or not self._connected:
+            _LOGGER.debug("Rainmaker client not connected; reconnecting")
+            await self._reconnect()
+
+    async def _reconnect(self) -> None:
+        self._connected = False
+        await self.async_close()
+        await self.async_connect()
+
     async def async_get_nodes(self) -> dict[str, Any]:
         """Return a list of normalized nodes with params and params_meta."""
-        if not self._client:
-            _LOGGER.error("Client not initialized")
-            raise RainmakerConnectionError("Client not initialized")
-            
-        try:
-            _LOGGER.debug("Fetching nodes from Rainmaker API...")
-            data = await self._client.async_get_nodes(node_details=True)
-            _LOGGER.debug("Successfully fetched nodes data")
-        except Exception as err:
-            _LOGGER.error("Failed to fetch nodes: %s (type: %s)", err, type(err).__name__)
-            raise RainmakerConnectionError(f"Failed to fetch nodes: {err}") from err
-            
+        await self._ensure_connection()
+
+        last_err: Exception | None = None
+        data: dict[str, Any] | None = None
+        for attempt in (1, 2):
+            try:
+                assert self._client is not None
+                _LOGGER.debug("Fetching nodes from Rainmaker API (attempt %d)...", attempt)
+                data = cast(
+                    dict[str, Any],
+                    await self._client.async_get_nodes(node_details=True),
+                )
+                _LOGGER.debug("Successfully fetched nodes data")
+                break
+            except Exception as err:  # pragma: no cover - network resilience
+                last_err = err
+                _LOGGER.warning(
+                    "Failed to fetch nodes on attempt %d: %s (type: %s)",
+                    attempt,
+                    err,
+                    type(err).__name__,
+                )
+                if attempt == 1:
+                    await self._reconnect()
+                    continue
+                _LOGGER.error("Exhausted retries fetching nodes after reconnect")
+                raise RainmakerConnectionError(f"Failed to fetch nodes: {err}") from err
+
+        if data is None:  # pragma: no cover - defensive safety
+            raise RainmakerConnectionError("Failed to fetch nodes: no data returned")
         if "node_details" not in data:
             _LOGGER.error("API response missing node_details. Keys present: %s", list(data.keys()) if isinstance(data, dict) else type(data))
             raise RainmakerError(f"Wrong data format for nodes: {data}")
