@@ -26,8 +26,6 @@
 | `sensor`        | Sensor entities for temperature, humidity and other values.              |
 | `switch`        | Switch controls for writable boolean parameters.                         |
 
-![example][exampleimg]
-
 ## Installation
 
 ### HACS (Recommended)

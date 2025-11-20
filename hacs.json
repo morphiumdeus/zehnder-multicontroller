@@ -1,7 +1,12 @@
 {
   "name": "Zehnder Multicontroller",
   "hacs": "1.6.0",
-  "domains": ["binary_sensor", "climate", "number", "sensor", "switch"],
-  "iot_class": "Cloud Polling",
+  "domains": [
+    "binary_sensor",
+    "climate",
+    "number",
+    "sensor",
+    "switch"
+  ],
   "homeassistant": "0.118.0"
 }
