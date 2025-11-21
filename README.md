@@ -18,13 +18,13 @@
 
 **This component will set up the following platforms.**
 
-| Platform        | Description                                                               |
-| --------------- | ------------------------------------------------------------------------- |
-| `binary_sensor` | Read-only boolean sensors from your Zehnder devices.                     |
-| `climate`       | Climate control for temperature and HVAC mode management.                |
-| `number`        | Number controls for writable numeric parameters.                         |
-| `sensor`        | Sensor entities for temperature, humidity and other values.              |
-| `switch`        | Switch controls for writable boolean parameters.                         |
+| Platform        | Description                                                 |
+| --------------- | ----------------------------------------------------------- |
+| `binary_sensor` | Read-only boolean sensors from your Zehnder devices.        |
+| `climate`       | Climate control for temperature and HVAC mode management.   |
+| `number`        | Number controls for writable numeric parameters.            |
+| `sensor`        | Sensor entities for temperature, humidity and other values. |
+| `switch`        | Switch controls for writable boolean parameters.            |
 
 ## Installation
 

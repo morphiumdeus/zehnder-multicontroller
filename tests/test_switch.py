@@ -1,55 +1,41 @@
-"""Test Zehnder Multicontroller switch."""
-from unittest.mock import call
-from unittest.mock import patch
+"""Tests for switch platform entity behaviour."""
+from __future__ import annotations
 
-from custom_components.zehnder_multicontroller import (
-    async_setup_entry,
-)
-from custom_components.zehnder_multicontroller.const import (
-    DEFAULT_NAME,
-)
-from custom_components.zehnder_multicontroller.const import (
-    DOMAIN,
-)
-from custom_components.zehnder_multicontroller.const import (
-    SWITCH,
-)
-from homeassistant.components.switch import SERVICE_TURN_OFF
-from homeassistant.components.switch import SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+import pytest
 
-from .const import MOCK_CONFIG
+from custom_components.zehnder_multicontroller.switch import RainmakerParamSwitch
+from custom_components.zehnder_multicontroller.const import DOMAIN
 
 
-async def test_switch_services(hass):
-    """Test switch services."""
-    # Create a mock entry so we don't have to go through config flow
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
-    assert await async_setup_entry(hass, config_entry)
-    await hass.async_block_till_done()
+@pytest.mark.asyncio
+async def test_switch_is_on_and_service_calls(monkeypatch, DummyCoordinator, DummyAPI):
+    coordinator = DummyCoordinator()
+    coordinator.data = {
+        "node1": {"param1": {"value": 1, "data_type": "bool", "properties": ["write"]}, "Name": {"value": "Node 1"}}
+    }
 
-    # Functions/objects can be patched directly in test code as well and can be used to test
-    # additional things, like whether a function was called or what arguments it was called with
-    with patch(
-        "custom_components.zehnder_multicontroller.ZehnderMulticontrollerApiClient.async_set_title"
-    ) as title_func:
-        await hass.services.async_call(
-            SWITCH,
-            SERVICE_TURN_OFF,
-            service_data={ATTR_ENTITY_ID: f"{SWITCH}.{DEFAULT_NAME}_{SWITCH}"},
-            blocking=True,
-        )
-        assert title_func.called
-        assert title_func.call_args == call("foo")
+    api = DummyAPI()
 
-        title_func.reset_mock()
+    # Create the entity
+    switch = RainmakerParamSwitch(coordinator, "entry1", "node1", "Node 1", "param1")
 
-        await hass.services.async_call(
-            SWITCH,
-            SERVICE_TURN_ON,
-            service_data={ATTR_ENTITY_ID: f"{SWITCH}.{DEFAULT_NAME}_{SWITCH}"},
-            blocking=True,
-        )
-        assert title_func.called
-        assert title_func.call_args == call("bar")
+    # Provide hass.data structure expected by the entity methods
+    class DummyHass:
+        def __init__(self):
+            self.data = {DOMAIN: {"entry1": {"coordinator": coordinator, "api": api}}}
+
+    switch.hass = DummyHass()
+
+    assert switch.is_on is True
+
+    # Turn off
+    coordinator.api = api
+    await switch.async_turn_off()
+    api.async_set_param.assert_called_with("node1", "param1", False)
+    coordinator.async_request_refresh.assert_awaited()
+
+    # Turn on
+    await switch.async_turn_on()
+    api.async_set_param.assert_called_with("node1", "param1", True)
+    coordinator.async_request_refresh.assert_awaited()
+

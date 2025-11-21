@@ -5,17 +5,17 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_PASSWORD
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from .api import RainmakerAPI
+from .api import RainmakerAuthError
+from .api import RainmakerConnectionError
 from .const import DOMAIN
-from .api import (
-            RainmakerAPI,
-            RainmakerConnectionError,
-            RainmakerAuthError,
-        )
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +56,9 @@ class ZehnderMulticontrollerFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is None:
-            return self.async_show_form(data_schema=STEP_USER_DATA_SCHEMA, errors=errors)
+            return self.async_show_form(
+                data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            )
 
         try:
             info = await validate_input(self.hass, user_input)

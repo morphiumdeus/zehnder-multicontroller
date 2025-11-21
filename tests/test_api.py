@@ -1,87 +1,87 @@
-"""Tests for Zehnder Multicontroller api."""
+"""Unit tests for the Rainmaker API adapter."""
+from __future__ import annotations
+
 import asyncio
 
-import aiohttp
-from custom_components.zehnder_multicontroller.api import (
-    ZehnderMulticontrollerApiClient,
-)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import pytest
+
+from custom_components.zehnder_multicontroller import api as api_module
 
 
-async def test_api(hass, aioclient_mock, caplog):
-    """Test API calls."""
+class DummyClient:
+    def __init__(self, host: str) -> None:
+        self.host = host
+        self._closed = False
 
-    # To test the api submodule, we first create an instance of our API client
-    api = ZehnderMulticontrollerApiClient("test", "test", async_get_clientsession(hass))
+    async def async_login(self, username: str, password: str) -> None:
+        if username == "bad":
+            raise Exception("auth failed")
 
-    # Use aioclient_mock which is provided by `pytest_homeassistant_custom_components`
-    # to mock responses to aiohttp requests. In this case we are telling the mock to
-    # return {"test": "test"} when a `GET` call is made to the specified URL. We then
-    # call `async_get_data` which will make that `GET` request.
-    aioclient_mock.get(
-        "https://jsonplaceholder.typicode.com/posts/1", json={"test": "test"}
-    )
-    assert await api.async_get_data() == {"test": "test"}
+    async def async_get_nodes(self, node_details: bool = False) -> dict:
+        await asyncio.sleep(0)
+        return {"node_details": [{"id": "n1", "params": {"multicontrol": {"p": 1}}, "config": {"devices": [{"params": [{"name": "p"}]}]}}]}
 
-    # We do the same for `async_set_title`. Note the difference in the mock call
-    # between the previous step and this one. We use `patch` here instead of `get`
-    # because we know that `async_set_title` calls `api_wrapper` with `patch` as the
-    # first parameter
-    aioclient_mock.patch("https://jsonplaceholder.typicode.com/posts/1")
-    assert await api.async_set_title("test") is None
+    async def async_set_params(self, batch):
+        return [{"node_id": batch[0]["node_id"], "status": "success"}]
 
-    # In order to get 100% coverage, we need to test `api_wrapper` to test the code
-    # that isn't already called by `async_get_data` and `async_set_title`. Because the
-    # only logic that lives inside `api_wrapper` that is not being handled by a third
-    # party library (aiohttp) is the exception handling, we also want to simulate
-    # raising the exceptions to ensure that the function handles them as expected.
-    # The caplog fixture allows access to log messages in tests. This is particularly
-    # useful during exception handling testing since often the only action as part of
-    # exception handling is a logging statement
-    caplog.clear()
-    aioclient_mock.put(
-        "https://jsonplaceholder.typicode.com/posts/1", exc=asyncio.TimeoutError
-    )
-    assert (
-        await api.api_wrapper("put", "https://jsonplaceholder.typicode.com/posts/1")
-        is None
-    )
-    assert (
-        len(caplog.record_tuples) == 1
-        and "Timeout error fetching information from" in caplog.record_tuples[0][2]
-    )
+    async def async_close(self):
+        self._closed = True
 
-    caplog.clear()
-    aioclient_mock.post(
-        "https://jsonplaceholder.typicode.com/posts/1", exc=aiohttp.ClientError
-    )
-    assert (
-        await api.api_wrapper("post", "https://jsonplaceholder.typicode.com/posts/1")
-        is None
-    )
-    assert (
-        len(caplog.record_tuples) == 1
-        and "Error fetching information from" in caplog.record_tuples[0][2]
-    )
 
-    caplog.clear()
-    aioclient_mock.post("https://jsonplaceholder.typicode.com/posts/2", exc=Exception)
-    assert (
-        await api.api_wrapper("post", "https://jsonplaceholder.typicode.com/posts/2")
-        is None
-    )
-    assert (
-        len(caplog.record_tuples) == 1
-        and "Something really wrong happened!" in caplog.record_tuples[0][2]
-    )
+@pytest.mark.asyncio
+async def test_rainmaker_api_connect_and_get_nodes(monkeypatch):
+    """Test that RainmakerAPI connects and fetches nodes using the internal client."""
 
-    caplog.clear()
-    aioclient_mock.post("https://jsonplaceholder.typicode.com/posts/3", exc=TypeError)
-    assert (
-        await api.api_wrapper("post", "https://jsonplaceholder.typicode.com/posts/3")
-        is None
-    )
-    assert (
-        len(caplog.record_tuples) == 1
-        and "Error parsing information from" in caplog.record_tuples[0][2]
-    )
+    # Patch the external RainmakerClient to our dummy
+    monkeypatch.setattr(api_module, "RainmakerClient", DummyClient)
+
+    api = api_module.RainmakerAPI(None, "https://host/", "user", "pass")
+    await api.async_connect()
+    assert api.is_connected
+
+    nodes = await api.async_get_nodes()
+    assert "node_details" in nodes
+    assert nodes["node_details"][0]["id"] == "n1"
+
+
+@pytest.mark.asyncio
+async def test_rainmaker_api_set_param_and_close(monkeypatch):
+    monkeypatch.setattr(api_module, "RainmakerClient", DummyClient)
+
+    api = api_module.RainmakerAPI(None, "https://host/", "user", "pass")
+    await api.async_connect()
+    await api.async_set_param("n1", "p", 2)
+    await api.async_close()
+    assert not api.is_connected
+
+
+@pytest.mark.asyncio
+async def test_async_get_nodes_wrong_format(monkeypatch):
+    class BadClient:
+        def __init__(self, host: str) -> None:
+            self.host = host
+
+        async def async_login(self, username: str, password: str) -> None:
+            return None
+
+        async def async_get_nodes(self, node_details: bool = False) -> dict:
+            return {"unexpected": []}
+
+        async def async_close(self):
+            return None
+
+    monkeypatch.setattr(api_module, "RainmakerClient", BadClient)
+
+    api = api_module.RainmakerAPI(None, "https://host/", "user", "pass")
+    await api.async_connect()
+    with pytest.raises(api_module.RainmakerError):
+        await api.async_get_nodes()
+
+
+def test_async_set_param_not_connected():
+    api = api_module.RainmakerAPI(None, "https://host/", "user", "pass")
+    with pytest.raises(api_module.RainmakerConnectionError):
+        import asyncio
+
+        asyncio.get_event_loop().run_until_complete(api.async_set_param("n1", "p", 1))
+

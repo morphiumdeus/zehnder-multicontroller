@@ -1,17 +1,16 @@
 """Binary sensor platform for Zehnder Multicontroller."""
 from __future__ import annotations
 
-from typing import Any
 import logging
 from functools import cached_property
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -63,7 +62,9 @@ async def async_setup_entry(
 ) -> None:
     entry_data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
     if not entry_data:
-        _LOGGER.debug("No entry data for %s, skipping binary sensor setup", entry.entry_id)
+        _LOGGER.debug(
+            "No entry data for %s, skipping binary sensor setup", entry.entry_id
+        )
         return
 
     coordinator: DataUpdateCoordinator = entry_data["coordinator"]
@@ -80,7 +81,9 @@ async def async_setup_entry(
                 and "read" in meta.get("properties", [])
                 and "write" not in meta.get("properties", [])
             ):
-                entity = RainmakerParamBinarySensor(coordinator, entry.entry_id, node_id, node_name, param)
+                entity = RainmakerParamBinarySensor(
+                    coordinator, entry.entry_id, node_id, node_name, param
+                )
                 entities.append(entity)
 
     async_add_entities(entities, True)

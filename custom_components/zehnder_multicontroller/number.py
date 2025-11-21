@@ -1,17 +1,16 @@
 """Number platform for Zehnder Multicontroller."""
 from __future__ import annotations
 
-from typing import Any
 import logging
 from functools import cached_property
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -36,7 +35,6 @@ class RainmakerParamNumber(CoordinatorEntity, NumberEntity):
         self._param = param
         self._attr_name = f"{node_name} {param}"
         self._unique_id = f"{entry_id}_{node_id}_{param}"
-        
         # Set bounds from metadata
         if bounds and isinstance(bounds, dict):
             self._attr_native_min_value = bounds.get("min")
@@ -97,7 +95,10 @@ async def async_setup_entry(
             # Skip schedules, config, and Name parameters
             if param == "Name" or param == "config" or "schedule" in param.lower():
                 continue
-            if "write" in meta.get("properties", []) and meta.get("data_type") != "bool":
+            if (
+                "write" in meta.get("properties", [])
+                and meta.get("data_type") != "bool"
+            ):
                 bounds = meta.get("bounds")
                 entity = RainmakerParamNumber(
                     coordinator, entry.entry_id, node_id, node_name, param, bounds

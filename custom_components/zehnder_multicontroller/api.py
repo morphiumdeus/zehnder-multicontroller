@@ -1,8 +1,10 @@
 """API adapter for Rainmaker cloud API."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
+from typing import cast
 
 from aiohttp import ClientError
 from rainmaker_http.client import RainmakerClient
@@ -73,7 +75,9 @@ class RainmakerAPI:
             _LOGGER.error("Network error during rainmaker login: %s", err)
             raise RainmakerConnectionError("Network error") from err
         except Exception as err:
-            _LOGGER.error("Authentication/login failed: %s (type: %s)", err, type(err).__name__)
+            _LOGGER.error(
+                "Authentication/login failed: %s (type: %s)", err, type(err).__name__
+            )
             raise RainmakerAuthError("Authentication failed") from err
 
         self._connected = True
@@ -93,12 +97,13 @@ class RainmakerAPI:
         """Return a list of normalized nodes with params and params_meta."""
         await self._ensure_connection()
 
-        last_err: Exception | None = None
         data: dict[str, Any] | None = None
         for attempt in (1, 2):
             try:
                 assert self._client is not None
-                _LOGGER.debug("Fetching nodes from Rainmaker API (attempt %d)...", attempt)
+                _LOGGER.debug(
+                    "Fetching nodes from Rainmaker API (attempt %d)...", attempt
+                )
                 data = cast(
                     dict[str, Any],
                     await self._client.async_get_nodes(node_details=True),
@@ -106,7 +111,6 @@ class RainmakerAPI:
                 _LOGGER.debug("Successfully fetched nodes data")
                 break
             except Exception as err:  # pragma: no cover - network resilience
-                last_err = err
                 _LOGGER.warning(
                     "Failed to fetch nodes on attempt %d: %s (type: %s)",
                     attempt,
@@ -122,9 +126,12 @@ class RainmakerAPI:
         if data is None:  # pragma: no cover - defensive safety
             raise RainmakerConnectionError("Failed to fetch nodes: no data returned")
         if "node_details" not in data:
-            _LOGGER.error("API response missing node_details. Keys present: %s", list(data.keys()) if isinstance(data, dict) else type(data))
+            _LOGGER.error(
+                "API response missing node_details. Keys present: %s",
+                list(data.keys()) if isinstance(data, dict) else type(data),
+            )
             raise RainmakerError(f"Wrong data format for nodes: {data}")
-            
+
         _LOGGER.debug("Found %d node(s) in response", len(data.get("node_details", [])))
         return data
 

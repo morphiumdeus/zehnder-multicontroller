@@ -1,26 +1,27 @@
 """Climate platform for Zehnder Multicontroller."""
 from __future__ import annotations
 
-from typing import Any
 import logging
 from functools import cached_property
+from typing import Any
 
-from homeassistant.components.climate import ClimateEntity, HVACMode, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_FAN_NAMES = ["Away", "Low", "Medium", "High"]
+
 
 class ZehnderClimate(CoordinatorEntity, ClimateEntity):
     def __init__(
@@ -46,7 +47,9 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
         self._fan_names = self._initialize_fan_names()
 
         _LOGGER.debug(
-            "Creating ZehnderClimate for node %s with fan names: %s", node_id, self._fan_names
+            "Creating ZehnderClimate for node %s with fan names: %s",
+            node_id,
+            self._fan_names,
         )
 
         self._attr_supported_features = self.get_supported_features()
@@ -54,21 +57,21 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
     def _initialize_fan_names(self) -> list[str]:
         """Initialize fan mode names based on fan_speed bounds."""
         node_data = self.coordinator.data.get(self._node_id, {})
-        
+
         if "fan_speed" not in node_data:
             return DEFAULT_FAN_NAMES
-        
+
         bounds = node_data["fan_speed"].get("bounds", {})
         min_val = bounds.get("min", 0)
         max_val = bounds.get("max", 3)
-        
+
         # Calculate number of levels
         num_levels = int(max_val - min_val) + 1
-        
+
         # Check if default names match the number of levels
         if num_levels == len(DEFAULT_FAN_NAMES):
             return DEFAULT_FAN_NAMES
-        
+
         # Generate numeric names if counts don't match
         return [str(i) for i in range(min_val, max_val + 1)]
 
@@ -130,11 +133,15 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
         features_flag = ClimateEntityFeature(0)
         node_data = self.coordinator.data.get(self._node_id, {})
 
-        has_temp_setpoint = "temp_setpoint" in node_data and "write" in node_data["temp_setpoint"].get("properties", [])
+        has_temp_setpoint = "temp_setpoint" in node_data and "write" in node_data[
+            "temp_setpoint"
+        ].get("properties", [])
         if has_temp_setpoint:
             features_flag |= ClimateEntityFeature.TARGET_TEMPERATURE
 
-        has_fan = "fan_speed" in node_data and "write" in node_data["fan_speed"].get("properties", [])
+        has_fan = "fan_speed" in node_data and "write" in node_data["fan_speed"].get(
+            "properties", []
+        )
         if has_fan:
             features_flag |= ClimateEntityFeature.FAN_MODE
 
@@ -169,7 +176,7 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
         if val is None:
             return None
         level = int(val)
-        
+
         if 0 <= level < len(self._fan_names):
             return self._fan_names[level]
         return None
@@ -224,24 +231,24 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     _LOGGER.info("Setting up climate platform for entry %s", entry.entry_id)
-    
+
     entry_data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
     if not entry_data:
         _LOGGER.error(
             "No entry data found for %s, aborting climate setup", entry.entry_id
         )
         return
-    
+
     coordinator = entry_data["coordinator"]
     _LOGGER.debug("Coordinator data contains %d nodes", len(coordinator.data))
 
     entities: list[ZehnderClimate] = []
     registry = er.async_get(hass)
-    
+
     for node_id, params in coordinator.data.items():
         _LOGGER.debug("Checking node %s for climate entity creation", node_id)
         _LOGGER.debug("Node %s params: %s", node_id, list(params.keys()))
-        
+
         if "temp" not in params:
             _LOGGER.debug("Node %s does not have 'temp' parameter, skipping", node_id)
             continue
@@ -257,7 +264,9 @@ async def async_setup_entry(
             continue
 
         node_name = params.get("Name", {}).get("value", node_id)
-        _LOGGER.info("Creating climate entity for node %s (name: %s)", node_id, node_name)
+        _LOGGER.info(
+            "Creating climate entity for node %s (name: %s)", node_id, node_name
+        )
         entities.append(ZehnderClimate(coordinator, entry.entry_id, node_id, node_name))
 
     _LOGGER.info("Adding %d climate entities", len(entities))

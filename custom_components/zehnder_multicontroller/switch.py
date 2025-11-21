@@ -1,17 +1,17 @@
 """Switch platform for Zehnder Multicontroller."""
 from __future__ import annotations
 
-from typing import Any
 import logging
 from functools import cached_property
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -63,7 +63,9 @@ class RainmakerParamSwitch(CoordinatorEntity, SwitchEntity):
                 "coordinator"
             ].api.async_set_param(self._node_id, self._param, True)
         except Exception:  # pragma: no cover - surface errors to logs
-            _LOGGER.exception("Error turning on %s on node %s", self._param, self._node_id)
+            _LOGGER.exception(
+                "Error turning on %s on node %s", self._param, self._node_id
+            )
         finally:
             await self.hass.data[DOMAIN][self._entry_id][
                 "coordinator"
@@ -101,8 +103,12 @@ async def async_setup_entry(
             # Skip schedules, config, and Name parameters
             if param == "Name" or param == "config" or "schedule" in param.lower():
                 continue
-            if meta.get("data_type") == "bool" and "write" in meta.get("properties", []):
-                entity = RainmakerParamSwitch(coordinator, entry.entry_id, node_id, node_name, param)
+            if meta.get("data_type") == "bool" and "write" in meta.get(
+                "properties", []
+            ):
+                entity = RainmakerParamSwitch(
+                    coordinator, entry.entry_id, node_id, node_name, param
+                )
                 entities.append(entity)
 
     async_add_entities(entities, True)

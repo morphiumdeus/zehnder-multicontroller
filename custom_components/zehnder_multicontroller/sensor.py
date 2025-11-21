@@ -1,17 +1,18 @@
 """Sensor platform for Zehnder Multicontroller."""
 from __future__ import annotations
 
-from typing import Any
 import logging
 from functools import cached_property
+from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -76,7 +77,9 @@ async def async_setup_entry(
                 continue
             dtype = meta.get("data_type", "").lower()
             if dtype not in ("bool", "int", "float", "number"):
-                entity = RainmakerParamSensor(coordinator, entry.entry_id, node_id, node_name, param)
+                entity = RainmakerParamSensor(
+                    coordinator, entry.entry_id, node_id, node_name, param
+                )
                 # Attach simple metadata-driven attributes
                 if "temp" in param.lower():
                     entity._attr_native_unit_of_measurement = "°C"

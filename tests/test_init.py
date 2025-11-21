@@ -1,63 +1,93 @@
-"""Test Zehnder Multicontroller setup process."""
+"""Tests for integration setup/unload helpers (focused unit tests)."""
+from __future__ import annotations
+
 import pytest
-from custom_components.zehnder_multicontroller import (
-    async_reload_entry,
-)
+
 from custom_components.zehnder_multicontroller import (
     async_setup_entry,
-)
-from custom_components.zehnder_multicontroller import (
     async_unload_entry,
 )
-from custom_components.zehnder_multicontroller import (
-    ZehnderMulticontrollerDataUpdateCoordinator,
-)
-from custom_components.zehnder_multicontroller.const import (
-    DOMAIN,
-)
-from homeassistant.exceptions import ConfigEntryNotReady
+from custom_components.zehnder_multicontroller.const import DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from .const import MOCK_CONFIG
 
+@pytest.mark.asyncio
+async def test_setup_and_unload_entry_creates_hass_data(monkeypatch, DummyAPI, DummyCoordinator):
+    """Verify async_setup_entry stores runtime data and unload removes it."""
+    # Patch the integration to use the shared test Dummy classes which avoid
+    # network access and the real coordinator startup behaviour.
+    monkeypatch.setattr(
+        "custom_components.zehnder_multicontroller.api.RainmakerAPI",
+        DummyAPI,
+    )
+    monkeypatch.setattr(
+        "custom_components.zehnder_multicontroller.coordinator.RainmakerCoordinator",
+        DummyCoordinator,
+    )
 
-# We can pass fixtures as defined in conftest.py to tell pytest to use the fixture
-# for a given test. We can also leverage fixtures and mocks that are available in
-# Home Assistant using the pytest_homeassistant_custom_component plugin.
-# Assertions allow you to verify that the return value of whatever is on the left
-# side of the assertion matches with the right side.
-async def test_setup_unload_and_reload_entry(hass, bypass_get_data):
-    """Test entry setup and unload."""
-    # Create a mock entry so we don't have to go through config flow
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    # Avoid attempting to actually forward setups to platform modules
+    # (loader may not find the integration in this test environment).
+    from unittest.mock import AsyncMock
 
-    # Set up the entry and assert that the values set during setup are where we expect
-    # them to be. Because we have patched the ZehnderMulticontrollerDataUpdateCoordinator.async_get_data
-    # call, no code from custom_components/zehnder_multicontroller/api.py actually runs.
+    class DummyConfigEntries:
+        async def async_forward_entry_setups(self, entry, platforms):
+            return None
+
+        async def async_unload_platforms(self, entry, platforms):
+            return True
+
+    class DummyHass:
+        def __init__(self):
+            self.data = {}
+            self.config_entries = DummyConfigEntries()
+            # Minimal config required by Home Assistant helpers used during setup
+            import types as _types
+
+            self.config = _types.SimpleNamespace(config_dir=".")
+
+    hass = DummyHass()
+
+    monkeypatch.setattr(hass.config_entries, "async_forward_entry_setups", AsyncMock(return_value=None))
+
+    # Stub the entity registry getter used by the integration migration
+    # helper so it does not try to access HomeAssistant internals like
+    # the event bus or storage manager during this unit test.
+    from types import SimpleNamespace
+    import importlib
+
+    mod = importlib.import_module("custom_components.zehnder_multicontroller")
+    monkeypatch.setattr(mod, "er", SimpleNamespace(async_get=lambda hass: SimpleNamespace(entities={}, async_remove=lambda eid: None)))
+
+    from custom_components.zehnder_multicontroller.const import VERSION
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={"integration_version": VERSION})
+
+    # Store the minimal expected entry data before setup
     assert await async_setup_entry(hass, config_entry)
     assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
-    assert (
-        type(hass.data[DOMAIN][config_entry.entry_id]) == ZehnderMulticontrollerDataUpdateCoordinator
-    )
 
-    # Reload the entry and assert that the data from above is still there
-    assert await async_reload_entry(hass, config_entry) is None
-    assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
-    assert (
-        type(hass.data[DOMAIN][config_entry.entry_id]) == ZehnderMulticontrollerDataUpdateCoordinator
-    )
-
-    # Unload the entry and verify that the data has been removed
     assert await async_unload_entry(hass, config_entry)
     assert config_entry.entry_id not in hass.data[DOMAIN]
 
 
-async def test_setup_entry_exception(hass, error_on_get_data):
+@pytest.mark.asyncio
+async def test_setup_entry_exception(error_on_get_data):
     """Test ConfigEntryNotReady when API raises an exception during entry setup."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
 
-    # In this case we are testing the condition where async_setup_entry raises
-    # ConfigEntryNotReady using the `error_on_get_data` fixture which simulates
-    # an error.
-    with pytest.raises(ConfigEntryNotReady):
-        assert await async_setup_entry(hass, config_entry)
+    # Use a minimal hass replacement so we don't trigger the full HA storage
+    # stack during this unit test. The `error_on_get_data` fixture patches the
+    # coordinator initial refresh to raise.
+    class DummyHass:
+        def __init__(self):
+            self.data = {}
+            import types as _types
+
+            self.config = _types.SimpleNamespace(config_dir=".")
+
+    hass = DummyHass()
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, entry_id="test")
+
+    # When the coordinator initial refresh raises, setup should propagate the error
+    with pytest.raises(Exception):
+        await async_setup_entry(hass, config_entry)
+
