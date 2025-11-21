@@ -2,14 +2,11 @@
 from __future__ import annotations
 
 import pytest
-
+from custom_components.zehnder_multicontroller.api import RainmakerAuthError
+from custom_components.zehnder_multicontroller.api import RainmakerConnectionError
+from custom_components.zehnder_multicontroller.config_flow import validate_input
 from custom_components.zehnder_multicontroller.config_flow import (
     ZehnderMulticontrollerFlowHandler,
-    validate_input,
-)
-from custom_components.zehnder_multicontroller.api import (
-    RainmakerAuthError,
-    RainmakerConnectionError,
 )
 
 
@@ -27,7 +24,9 @@ async def test_async_step_user_auth_error(monkeypatch):
     async def _bad(hass, user_input):
         raise RainmakerAuthError()
 
-    monkeypatch.setattr("custom_components.zehnder_multicontroller.config_flow.validate_input", _bad)
+    monkeypatch.setattr(
+        "custom_components.zehnder_multicontroller.config_flow.validate_input", _bad
+    )
 
     res = await handler.async_step_user({"host": "h", "username": "u", "password": "p"})
     assert res["type"] == "form"
@@ -41,7 +40,9 @@ async def test_async_step_user_cannot_connect(monkeypatch):
     async def _bad(hass, user_input):
         raise RainmakerConnectionError()
 
-    monkeypatch.setattr("custom_components.zehnder_multicontroller.config_flow.validate_input", _bad)
+    monkeypatch.setattr(
+        "custom_components.zehnder_multicontroller.config_flow.validate_input", _bad
+    )
 
     res = await handler.async_step_user({"host": "h", "username": "u", "password": "p"})
     assert res["type"] == "form"
@@ -55,7 +56,9 @@ async def test_async_step_user_success(monkeypatch):
     async def _good(hass, user_input):
         return {"title": "Zehnder Multicontroller"}
 
-    monkeypatch.setattr("custom_components.zehnder_multicontroller.config_flow.validate_input", _good)
+    monkeypatch.setattr(
+        "custom_components.zehnder_multicontroller.config_flow.validate_input", _good
+    )
     # prevent unique id collision checks and skip framework unique id logic
     handler._abort_if_unique_id_configured = lambda: None
 

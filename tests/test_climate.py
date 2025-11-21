@@ -2,11 +2,8 @@
 from __future__ import annotations
 
 import pytest
-
-from custom_components.zehnder_multicontroller.climate import (
-    ZehnderClimate,
-    DEFAULT_FAN_NAMES,
-)
+from custom_components.zehnder_multicontroller.climate import DEFAULT_FAN_NAMES
+from custom_components.zehnder_multicontroller.climate import ZehnderClimate
 from custom_components.zehnder_multicontroller.const import DOMAIN
 
 
@@ -19,7 +16,12 @@ def test_initialize_fan_names_default(DummyCoordinator):
 
 
 def test_initialize_fan_names_bounds(DummyCoordinator):
-    data = {"n1": {"Name": {"value": "Node One"}, "fan_speed": {"bounds": {"min": 1, "max": 3}}}}
+    data = {
+        "n1": {
+            "Name": {"value": "Node One"},
+            "fan_speed": {"bounds": {"min": 1, "max": 3}},
+        }
+    }
     coord = DummyCoordinator(data)
 
     ent = ZehnderClimate(coord, "entry1", "n1", "Node One")
@@ -33,7 +35,11 @@ async def test_temperature_and_modes_and_setters(DummyCoordinator, DummyAPI):
             "Name": {"value": "Node One"},
             "temp": {"value": 21.5},
             "temp_setpoint": {"value": 22.0, "properties": ["write"]},
-            "fan_speed": {"value": 2, "properties": ["write"], "bounds": {"min": 0, "max": 3}},
+            "fan_speed": {
+                "value": 2,
+                "properties": ["write"],
+                "bounds": {"min": 0, "max": 3},
+            },
             "season": {"value": 1},
             "radiant_enabled": {"value": True},
         }

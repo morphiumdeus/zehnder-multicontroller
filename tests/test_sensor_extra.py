@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import pytest
-
-from custom_components.zehnder_multicontroller.sensor import async_setup_entry
 from custom_components.zehnder_multicontroller.const import DOMAIN
+from custom_components.zehnder_multicontroller.sensor import async_setup_entry
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 

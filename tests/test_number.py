@@ -2,13 +2,10 @@
 from __future__ import annotations
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from custom_components.zehnder_multicontroller.number import (
-    RainmakerParamNumber,
-    async_setup_entry,
-)
 from custom_components.zehnder_multicontroller.const import DOMAIN
+from custom_components.zehnder_multicontroller.number import async_setup_entry
+from custom_components.zehnder_multicontroller.number import RainmakerParamNumber
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
 @pytest.mark.asyncio
@@ -36,7 +33,14 @@ async def test_number_async_set_native_value(DummyCoordinator, DummyAPI):
     hass = DummyHass()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"coordinator": coord}
 
-    ent = RainmakerParamNumber(coord, entry.entry_id, "n1", "Node One", "setpoint", bounds={"min": 0, "max": 10, "step": 0.5})
+    ent = RainmakerParamNumber(
+        coord,
+        entry.entry_id,
+        "n1",
+        "Node One",
+        "setpoint",
+        bounds={"min": 0, "max": 10, "step": 0.5},
+    )
     ent.hass = hass
 
     await ent.async_set_native_value(5.0)
@@ -51,7 +55,12 @@ async def test_async_setup_entry_creates_numbers(DummyCoordinator):
         "n1": {
             "Name": {"value": "Node One"},
             "config": {"value": "ignore"},
-            "num": {"data_type": "number", "properties": ["write"], "value": 1, "bounds": {"min": 0, "max": 5}},
+            "num": {
+                "data_type": "number",
+                "properties": ["write"],
+                "value": 1,
+                "bounds": {"min": 0, "max": 5},
+            },
             "schedule_1": {"data_type": "string", "value": "skip"},
         }
     }

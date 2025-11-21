@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-
 from custom_components.zehnder_multicontroller import api as api_module
 
 
@@ -19,7 +18,15 @@ class DummyClient:
 
     async def async_get_nodes(self, node_details: bool = False) -> dict:
         await asyncio.sleep(0)
-        return {"node_details": [{"id": "n1", "params": {"multicontrol": {"p": 1}}, "config": {"devices": [{"params": [{"name": "p"}]}]}}]}
+        return {
+            "node_details": [
+                {
+                    "id": "n1",
+                    "params": {"multicontrol": {"p": 1}},
+                    "config": {"devices": [{"params": [{"name": "p"}]}]},
+                }
+            ]
+        }
 
     async def async_set_params(self, batch):
         return [{"node_id": batch[0]["node_id"], "status": "success"}]
@@ -84,4 +91,3 @@ def test_async_set_param_not_connected():
         import asyncio
 
         asyncio.get_event_loop().run_until_complete(api.async_set_param("n1", "p", 1))
-

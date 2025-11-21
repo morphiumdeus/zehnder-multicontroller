@@ -1,13 +1,12 @@
 """Unit tests for binary sensor platform."""
 from __future__ import annotations
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
+from custom_components.zehnder_multicontroller.binary_sensor import async_setup_entry
 from custom_components.zehnder_multicontroller.binary_sensor import (
     RainmakerParamBinarySensor,
-    async_setup_entry,
 )
 from custom_components.zehnder_multicontroller.const import DOMAIN
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
 def test_binary_sensor_entity_properties(DummyCoordinator):

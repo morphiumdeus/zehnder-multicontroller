@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 import pytest
-
-from homeassistant.helpers.update_coordinator import UpdateFailed
-
 from custom_components.zehnder_multicontroller.coordinator import RainmakerCoordinator
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
 @pytest.mark.asyncio

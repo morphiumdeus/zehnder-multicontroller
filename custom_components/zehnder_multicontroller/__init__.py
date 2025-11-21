@@ -107,4 +107,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if domain_data and entry.entry_id in domain_data:
             domain_data.pop(entry.entry_id)
     return unload_ok
-

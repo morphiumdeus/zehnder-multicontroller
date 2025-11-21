@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from custom_components.zehnder_multicontroller.entity import ZehnderMulticontrollerEntity
+from custom_components.zehnder_multicontroller.entity import (
+    ZehnderMulticontrollerEntity,
+)
 
 
 def test_entity_device_info_and_unique_id():

@@ -2,12 +2,9 @@
 from __future__ import annotations
 
 import pytest
-
-from custom_components.zehnder_multicontroller.switch import (
-    async_setup_entry,
-    RainmakerParamSwitch,
-)
 from custom_components.zehnder_multicontroller.const import DOMAIN
+from custom_components.zehnder_multicontroller.switch import async_setup_entry
+from custom_components.zehnder_multicontroller.switch import RainmakerParamSwitch
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 

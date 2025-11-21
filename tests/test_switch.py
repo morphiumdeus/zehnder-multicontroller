@@ -2,16 +2,18 @@
 from __future__ import annotations
 
 import pytest
-
-from custom_components.zehnder_multicontroller.switch import RainmakerParamSwitch
 from custom_components.zehnder_multicontroller.const import DOMAIN
+from custom_components.zehnder_multicontroller.switch import RainmakerParamSwitch
 
 
 @pytest.mark.asyncio
 async def test_switch_is_on_and_service_calls(monkeypatch, DummyCoordinator, DummyAPI):
     coordinator = DummyCoordinator()
     coordinator.data = {
-        "node1": {"param1": {"value": 1, "data_type": "bool", "properties": ["write"]}, "Name": {"value": "Node 1"}}
+        "node1": {
+            "param1": {"value": 1, "data_type": "bool", "properties": ["write"]},
+            "Name": {"value": "Node 1"},
+        }
     }
 
     api = DummyAPI()
@@ -38,4 +40,3 @@ async def test_switch_is_on_and_service_calls(monkeypatch, DummyCoordinator, Dum
     await switch.async_turn_on()
     api.async_set_param.assert_called_with("node1", "param1", True)
     coordinator.async_request_refresh.assert_awaited()
-

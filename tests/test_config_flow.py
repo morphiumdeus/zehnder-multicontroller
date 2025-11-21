@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import pytest
-
 from custom_components.zehnder_multicontroller.config_flow import validate_input
 
 
@@ -33,6 +32,8 @@ async def test_validate_input_auth_error(monkeypatch, hass):
 
     with pytest.raises(Exception):
         await validate_input(hass, {"host": "h", "username": "bad", "password": "p"})
+
+
 # The module-level config-flow validation tests are above. Additional
 # integration-style config flow tests that exercise the full UI flow are
 # intentionally omitted here — they require the Home Assistant config flow

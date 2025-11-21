@@ -1,5 +1,4 @@
 """API adapter for Rainmaker cloud API."""
-
 from __future__ import annotations
 
 import logging

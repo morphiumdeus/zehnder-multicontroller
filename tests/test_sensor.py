@@ -1,14 +1,11 @@
 """Unit tests for sensor platform."""
 from __future__ import annotations
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from custom_components.zehnder_multicontroller.sensor import (
-    RainmakerParamSensor,
-    async_setup_entry,
-)
 from custom_components.zehnder_multicontroller.const import DOMAIN
+from custom_components.zehnder_multicontroller.sensor import async_setup_entry
+from custom_components.zehnder_multicontroller.sensor import RainmakerParamSensor
 from homeassistant.components.sensor import SensorDeviceClass
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
 def test_sensor_entity_properties(DummyCoordinator):

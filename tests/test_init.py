@@ -2,17 +2,16 @@
 from __future__ import annotations
 
 import pytest
-
-from custom_components.zehnder_multicontroller import (
-    async_setup_entry,
-    async_unload_entry,
-)
+from custom_components.zehnder_multicontroller import async_setup_entry
+from custom_components.zehnder_multicontroller import async_unload_entry
 from custom_components.zehnder_multicontroller.const import DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
 @pytest.mark.asyncio
-async def test_setup_and_unload_entry_creates_hass_data(monkeypatch, DummyAPI, DummyCoordinator):
+async def test_setup_and_unload_entry_creates_hass_data(
+    monkeypatch, DummyAPI, DummyCoordinator
+):
     """Verify async_setup_entry stores runtime data and unload removes it."""
     # Patch the integration to use the shared test Dummy classes which avoid
     # network access and the real coordinator startup behaviour.
@@ -47,7 +46,9 @@ async def test_setup_and_unload_entry_creates_hass_data(monkeypatch, DummyAPI, D
 
     hass = DummyHass()
 
-    monkeypatch.setattr(hass.config_entries, "async_forward_entry_setups", AsyncMock(return_value=None))
+    monkeypatch.setattr(
+        hass.config_entries, "async_forward_entry_setups", AsyncMock(return_value=None)
+    )
 
     # Stub the entity registry getter used by the integration migration
     # helper so it does not try to access HomeAssistant internals like
@@ -56,7 +57,15 @@ async def test_setup_and_unload_entry_creates_hass_data(monkeypatch, DummyAPI, D
     import importlib
 
     mod = importlib.import_module("custom_components.zehnder_multicontroller")
-    monkeypatch.setattr(mod, "er", SimpleNamespace(async_get=lambda hass: SimpleNamespace(entities={}, async_remove=lambda eid: None)))
+    monkeypatch.setattr(
+        mod,
+        "er",
+        SimpleNamespace(
+            async_get=lambda hass: SimpleNamespace(
+                entities={}, async_remove=lambda eid: None
+            )
+        ),
+    )
 
     from custom_components.zehnder_multicontroller.const import VERSION
 
@@ -90,4 +99,3 @@ async def test_setup_entry_exception(error_on_get_data):
     # When the coordinator initial refresh raises, setup should propagate the error
     with pytest.raises(Exception):
         await async_setup_entry(hass, config_entry)
-

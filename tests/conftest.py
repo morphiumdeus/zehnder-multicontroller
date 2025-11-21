@@ -12,8 +12,9 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 @pytest.fixture(name="skip_notifications", autouse=True)
 def skip_notifications_fixture():
     """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
+    with (
+        patch("homeassistant.components.persistent_notification.async_create"),
+        patch("homeassistant.components.persistent_notification.async_dismiss"),
     ):
         yield
 
@@ -25,12 +26,15 @@ def bypass_get_data_fixture():
     """Skip calls to get data from API."""
     # Patch the RainmakerAPI connect and the coordinator's initial refresh so
     # integration setup does not perform network calls.
-    with patch(
-        "custom_components.zehnder_multicontroller.api.RainmakerAPI.async_connect",
-        return_value=None,
-    ), patch(
-        "custom_components.zehnder_multicontroller.coordinator.RainmakerCoordinator.async_config_entry_first_refresh",
-        return_value=None,
+    with (
+        patch(
+            "custom_components.zehnder_multicontroller.api.RainmakerAPI.async_connect",
+            return_value=None,
+        ),
+        patch(
+            "custom_components.zehnder_multicontroller.coordinator.RainmakerCoordinator.async_config_entry_first_refresh",
+            return_value=None,
+        ),
     ):
         yield
 
@@ -41,12 +45,15 @@ def bypass_get_data_fixture():
 def error_get_data_fixture():
     """Simulate error when retrieving data from API."""
     # Force coordinator initial refresh to raise to simulate setup failure
-    with patch(
-        "custom_components.zehnder_multicontroller.api.RainmakerAPI.async_connect",
-        return_value=None,
-    ), patch(
-        "custom_components.zehnder_multicontroller.coordinator.RainmakerCoordinator.async_config_entry_first_refresh",
-        side_effect=Exception,
+    with (
+        patch(
+            "custom_components.zehnder_multicontroller.api.RainmakerAPI.async_connect",
+            return_value=None,
+        ),
+        patch(
+            "custom_components.zehnder_multicontroller.coordinator.RainmakerCoordinator.async_config_entry_first_refresh",
+            side_effect=Exception,
+        ),
     ):
         yield
 
