@@ -34,7 +34,10 @@ jobs:
       - name: Install Python modules
         run: |
           pip install --constraint=.github/workflows/constraints.txt pre-commit black flake8 reorder-python-imports
-
+      - name: Install test dependencies
+        run: |
+          pip install -r requirements_test.txt
+          # Add any extra commands to install local dependencies if needed
       - name: Run pre-commit on all files
         run: |
           pre-commit run --all-files --show-diff-on-failure --color=always
