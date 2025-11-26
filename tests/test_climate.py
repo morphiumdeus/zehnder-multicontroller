@@ -4,7 +4,6 @@ from __future__ import annotations
 import pytest
 from custom_components.zehnder_multicontroller.climate import DEFAULT_FAN_NAMES
 from custom_components.zehnder_multicontroller.climate import ZehnderClimate
-from custom_components.zehnder_multicontroller.const import DOMAIN
 
 
 def test_initialize_fan_names_default(DummyCoordinator):

@@ -76,7 +76,7 @@ async def async_setup_entry(
             if param == "Name" or param == "config" or "schedule" in param.lower():
                 continue
             dtype = meta.get("data_type", "").lower()
-            if dtype not in ("bool", "int", "float", "number"):
+            if "write" not in meta.get("properties", []) and dtype != "bool":
                 entity = RainmakerParamSensor(
                     coordinator, entry.entry_id, node_id, node_name, param
                 )

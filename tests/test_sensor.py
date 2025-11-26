@@ -1,6 +1,7 @@
 """Unit tests for sensor platform."""
 from __future__ import annotations
 
+import pytest
 from custom_components.zehnder_multicontroller.const import DOMAIN
 from custom_components.zehnder_multicontroller.sensor import async_setup_entry
 from custom_components.zehnder_multicontroller.sensor import RainmakerParamSensor
@@ -24,9 +25,6 @@ def test_sensor_entity_properties(DummyCoordinator):
     assert ent.unique_id == "entry1_n1_TempSensor"
     # native_value is taken straight from data
     assert ent.native_value == 21.5
-
-
-import pytest
 
 
 @pytest.mark.asyncio

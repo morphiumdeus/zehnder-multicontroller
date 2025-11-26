@@ -4,7 +4,6 @@ from __future__ import annotations
 import pytest
 from custom_components.zehnder_multicontroller.api import RainmakerAuthError
 from custom_components.zehnder_multicontroller.api import RainmakerConnectionError
-from custom_components.zehnder_multicontroller.config_flow import validate_input
 from custom_components.zehnder_multicontroller.config_flow import (
     ZehnderMulticontrollerFlowHandler,
 )

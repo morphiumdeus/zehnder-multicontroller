@@ -1,6 +1,7 @@
 """Unit tests for binary sensor platform."""
 from __future__ import annotations
 
+import pytest
 from custom_components.zehnder_multicontroller.binary_sensor import async_setup_entry
 from custom_components.zehnder_multicontroller.binary_sensor import (
     RainmakerParamBinarySensor,
@@ -32,9 +33,6 @@ def test_binary_sensor_entity_properties(DummyCoordinator):
     else:
         ids = dev.identifiers
     assert (DOMAIN, "n1") in ids
-
-
-import pytest
 
 
 @pytest.mark.asyncio
