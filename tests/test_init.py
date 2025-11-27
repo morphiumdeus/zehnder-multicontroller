@@ -43,6 +43,10 @@ async def test_setup_and_unload_entry_creates_hass_data(
             import types as _types
 
             self.config = _types.SimpleNamespace(config_dir=".")
+            # Minimal event bus stub used by the entity registry during tests
+            from types import SimpleNamespace as _SS
+
+            self.bus = _SS(async_listen=lambda *a, **k: (lambda: None))
 
     hass = DummyHass()
 
@@ -92,6 +96,10 @@ async def test_setup_entry_exception(error_on_get_data):
             import types as _types
 
             self.config = _types.SimpleNamespace(config_dir=".")
+            # Provide a minimal event bus for entity registry initialization
+            from types import SimpleNamespace as _SS
+
+            self.bus = _SS(async_listen=lambda *a, **k: (lambda: None))
 
     hass = DummyHass()
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, entry_id="test")

@@ -51,4 +51,7 @@ async def test_async_setup_entry_skips_types_and_schedule(DummyCoordinator):
         added.extend(entities)
 
     await async_setup_entry(hass, entry, add)
-    assert len(added) == 0
+    # numeric read-only params are now exposed as sensors
+    assert len(added) == 1
+    ent = added[0]
+    assert ent.native_value == 5
