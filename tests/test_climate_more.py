@@ -1,7 +1,4 @@
-import asyncio
-
 import pytest
-
 from homeassistant.components.climate import HVACMode
 
 
@@ -10,13 +7,21 @@ async def test_initialize_fan_names_and_modes(DummyCoordinator):
     # No fan_speed -> default names
     data = {"node1": {"temp": {"value": 20}}}
     coord = DummyCoordinator(data)
-    from custom_components.zehnder_multicontroller.climate import ZehnderClimate, DEFAULT_FAN_NAMES
+    from custom_components.zehnder_multicontroller.climate import (
+        ZehnderClimate,
+        DEFAULT_FAN_NAMES,
+    )
 
     c = ZehnderClimate(coord, "entry1", "node1", "Node 1")
     assert c.fan_modes == DEFAULT_FAN_NAMES
 
     # Custom bounds that produce numeric names
-    data = {"node2": {"temp": {"value": 21}, "fan_speed": {"bounds": {"min": 0, "max": 2}, "value": 1}}}
+    data = {
+        "node2": {
+            "temp": {"value": 21},
+            "fan_speed": {"bounds": {"min": 0, "max": 2}, "value": 1},
+        }
+    }
     coord2 = DummyCoordinator(data)
     c2 = ZehnderClimate(coord2, "entry1", "node2", "Node 2")
     assert c2.fan_modes == ["0", "1", "2"]
@@ -42,15 +47,33 @@ async def test_hvac_mode_and_temperatures(DummyCoordinator):
     assert c.hvac_mode == HVACMode.OFF
 
     # Radiant enabled and season->HEAT/COOL/None
-    data2 = {"n2": {"temp": {"value": 18}, "radiant_enabled": {"value": True}, "season": {"value": 1}}}
+    data2 = {
+        "n2": {
+            "temp": {"value": 18},
+            "radiant_enabled": {"value": True},
+            "season": {"value": 1},
+        }
+    }
     c2 = ZehnderClimate(DummyCoordinator(data2), "eid", "n2", "N2")
     assert c2.hvac_mode == HVACMode.HEAT
 
-    data3 = {"n3": {"temp": {"value": 18}, "radiant_enabled": {"value": True}, "season": {"value": 2}}}
+    data3 = {
+        "n3": {
+            "temp": {"value": 18},
+            "radiant_enabled": {"value": True},
+            "season": {"value": 2},
+        }
+    }
     c3 = ZehnderClimate(DummyCoordinator(data3), "eid", "n3", "N3")
     assert c3.hvac_mode == HVACMode.COOL
 
-    data4 = {"n4": {"temp": {"value": 18}, "radiant_enabled": {"value": True}, "season": {"value": 99}}}
+    data4 = {
+        "n4": {
+            "temp": {"value": 18},
+            "radiant_enabled": {"value": True},
+            "season": {"value": 99},
+        }
+    }
     c4 = ZehnderClimate(DummyCoordinator(data4), "eid", "n4", "N4")
     assert c4.hvac_mode is None
 
@@ -62,7 +85,11 @@ async def test_supported_features_and_setters(DummyCoordinator, DummyAPI):
         "n": {
             "temp": {"value": 18},
             "temp_setpoint": {"value": 20, "properties": ["write"]},
-            "fan_speed": {"value": 0, "properties": ["write"], "bounds": {"min": 0, "max": 3}},
+            "fan_speed": {
+                "value": 0,
+                "properties": ["write"],
+                "bounds": {"min": 0, "max": 3},
+            },
             "radiant_enabled": {"value": True},
         }
     }
@@ -112,6 +139,7 @@ def test_handle_coordinator_update_exception(DummyCoordinator, monkeypatch):
         raise RuntimeError("boom")
 
     monkeypatch.setattr(c, "get_supported_features", bad_features)
+
     def _noop_write():
         return None
 
@@ -121,15 +149,25 @@ def test_handle_coordinator_update_exception(DummyCoordinator, monkeypatch):
 
 
 def test_fan_mode_out_of_range(DummyCoordinator):
-    data = {"n": {"temp": {"value": 20}, "fan_speed": {"value": 99, "bounds": {"min": 0, "max": 3}}}}
-    c = __import__("custom_components.zehnder_multicontroller.climate", fromlist=["ZehnderClimate"]).ZehnderClimate(
-        DummyCoordinator(data), "eid", "n", "Node"
-    )
+    data = {
+        "n": {
+            "temp": {"value": 20},
+            "fan_speed": {"value": 99, "bounds": {"min": 0, "max": 3}},
+        }
+    }
+    c = __import__(
+        "custom_components.zehnder_multicontroller.climate", fromlist=["ZehnderClimate"]
+    ).ZehnderClimate(DummyCoordinator(data), "eid", "n", "Node")
     assert c.fan_mode is None
 
 
 def test_unique_name_deviceinfo_and_setters_none(DummyCoordinator, DummyAPI):
-    data = {"n": {"temp": {"value": 20}, "temp_setpoint": {"value": 21, "properties": ["write"]}}}
+    data = {
+        "n": {
+            "temp": {"value": 20},
+            "temp_setpoint": {"value": 21, "properties": ["write"]},
+        }
+    }
     coord = DummyCoordinator(data)
     api = DummyAPI()
     coord.api = api
@@ -175,13 +213,28 @@ def test_async_setup_entry_skips_node_without_temp(monkeypatch, DummyCoordinator
 
     import asyncio
 
-    awaitable = __import__("custom_components.zehnder_multicontroller.climate", fromlist=["async_setup_entry"]).async_setup_entry
-    asyncio.get_event_loop().run_until_complete(awaitable(fake, type("E", (), {"entry_id": "eid"})(), add))
+    awaitable = __import__(
+        "custom_components.zehnder_multicontroller.climate",
+        fromlist=["async_setup_entry"],
+    ).async_setup_entry
+    asyncio.get_event_loop().run_until_complete(
+        awaitable(fake, type("E", (), {"entry_id": "eid"})(), add)
+    )
     # Only node 'b' has temp -> one entity created
     assert len(added) == 1
 
+
 def test_async_set_fan_mode_valid(DummyCoordinator, DummyAPI):
-    data = {"n": {"temp": {"value": 20}, "fan_speed": {"value": 2, "properties": ["write"], "bounds": {"min": 0, "max": 3}}}}
+    data = {
+        "n": {
+            "temp": {"value": 20},
+            "fan_speed": {
+                "value": 2,
+                "properties": ["write"],
+                "bounds": {"min": 0, "max": 3},
+            },
+        }
+    }
     coord = DummyCoordinator(data)
     api = DummyAPI()
     coord.api = api
@@ -195,16 +248,24 @@ def test_async_set_fan_mode_valid(DummyCoordinator, DummyAPI):
     asyncio.get_event_loop().run_until_complete(c.async_set_fan_mode(valid))
     api.async_set_param.assert_called()
 
+
 def test_fan_mode_none_when_value_missing(DummyCoordinator):
-    data = {"n": {"temp": {"value": 20}, "fan_speed": {"value": None, "bounds": {"min": 0, "max": 3}}}}
-    c = __import__("custom_components.zehnder_multicontroller.climate", fromlist=["ZehnderClimate"]).ZehnderClimate(
-        DummyCoordinator(data), "eid", "n", "Node"
-    )
+    data = {
+        "n": {
+            "temp": {"value": 20},
+            "fan_speed": {"value": None, "bounds": {"min": 0, "max": 3}},
+        }
+    }
+    c = __import__(
+        "custom_components.zehnder_multicontroller.climate", fromlist=["ZehnderClimate"]
+    ).ZehnderClimate(DummyCoordinator(data), "eid", "n", "Node")
     assert c.fan_mode is None
 
 
 def test_get_supported_features_variants(DummyCoordinator):
-    mod = __import__("custom_components.zehnder_multicontroller.climate", fromlist=["ZehnderClimate"]) 
+    mod = __import__(
+        "custom_components.zehnder_multicontroller.climate", fromlist=["ZehnderClimate"]
+    )
     ZehnderClimate = mod.ZehnderClimate
 
     # Only temp_setpoint with write
@@ -228,16 +289,19 @@ def test_get_supported_features_variants(DummyCoordinator):
 
 def test_current_and_target_none_and_hvac_modes(DummyCoordinator):
     # Empty data -> no temps
-    c = __import__("custom_components.zehnder_multicontroller.climate", fromlist=["ZehnderClimate"]).ZehnderClimate(
-        DummyCoordinator({}), "eid", "n", "N"
-    )
+    c = __import__(
+        "custom_components.zehnder_multicontroller.climate", fromlist=["ZehnderClimate"]
+    ).ZehnderClimate(DummyCoordinator({}), "eid", "n", "N")
     assert c.current_temperature is None
     assert c.target_temperature is None
     assert isinstance(c.hvac_modes, list)
 
 
 def test_async_setup_entry_no_entry_data_climate():
-    mod = __import__("custom_components.zehnder_multicontroller.climate", fromlist=["async_setup_entry"]) 
+    mod = __import__(
+        "custom_components.zehnder_multicontroller.climate",
+        fromlist=["async_setup_entry"],
+    )
     awaitable = mod.async_setup_entry
 
     class FakeHass:
@@ -251,7 +315,9 @@ def test_async_setup_entry_no_entry_data_climate():
 
     import asyncio
 
-    asyncio.get_event_loop().run_until_complete(awaitable(fake, type("E", (), {"entry_id": "eid"})(), add))
+    asyncio.get_event_loop().run_until_complete(
+        awaitable(fake, type("E", (), {"entry_id": "eid"})(), add)
+    )
 
 
 def test_async_setup_entry_creates_and_skips(monkeypatch, DummyCoordinator):
@@ -281,15 +347,21 @@ def test_async_setup_entry_creates_and_skips(monkeypatch, DummyCoordinator):
         lambda hass: Reg(),
     )
 
-    awaitable = __import__("custom_components.zehnder_multicontroller.climate", fromlist=["async_setup_entry"]).async_setup_entry
+    awaitable = __import__(
+        "custom_components.zehnder_multicontroller.climate",
+        fromlist=["async_setup_entry"],
+    ).async_setup_entry
     # Call sync (it's async) via running it
     import asyncio
 
-    asyncio.get_event_loop().run_until_complete(awaitable(fake, type("E", (), {"entry_id": "eid"})(), add))
+    asyncio.get_event_loop().run_until_complete(
+        awaitable(fake, type("E", (), {"entry_id": "eid"})(), add)
+    )
     assert any(e for e in added if isinstance(e.__class__.__name__, str))
 
     # Now simulate registry returning an id -> should skip creating duplicates
     added.clear()
+
     class Reg2:
         def async_get_entity_id(self, *a, **k):
             return "climate.zehnder_multicontroller_eid_nodea_climate"
@@ -299,5 +371,7 @@ def test_async_setup_entry_creates_and_skips(monkeypatch, DummyCoordinator):
         lambda hass: Reg2(),
     )
 
-    asyncio.get_event_loop().run_until_complete(awaitable(fake, type("E", (), {"entry_id": "eid"})(), add))
+    asyncio.get_event_loop().run_until_complete(
+        awaitable(fake, type("E", (), {"entry_id": "eid"})(), add)
+    )
     assert len(added) == 0

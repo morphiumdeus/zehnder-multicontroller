@@ -14,7 +14,7 @@ async def test_switch_setup_and_operations(DummyCoordinator, DummyAPI):
     api = DummyAPI()
     coord.api = api
 
-    from custom_components.zehnder_multicontroller.switch import async_setup_entry, RainmakerParamSwitch
+    from custom_components.zehnder_multicontroller.switch import async_setup_entry
 
     # Use minimal fake hass object
     class FakeHass:

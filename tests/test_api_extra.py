@@ -1,16 +1,13 @@
 """Extra unit tests for the Rainmaker API adapter."""
 from __future__ import annotations
 
-from aiohttp import ClientError
 import pytest
-
+from aiohttp import ClientError
 from custom_components.zehnder_multicontroller import api as api_mod
-from custom_components.zehnder_multicontroller.api import (
-    RainmakerAPI,
-    RainmakerError,
-    RainmakerAuthError,
-    RainmakerConnectionError,
-)
+from custom_components.zehnder_multicontroller.api import RainmakerAPI
+from custom_components.zehnder_multicontroller.api import RainmakerAuthError
+from custom_components.zehnder_multicontroller.api import RainmakerConnectionError
+from custom_components.zehnder_multicontroller.api import RainmakerError
 
 
 @pytest.mark.asyncio
@@ -117,7 +114,12 @@ async def test_async_get_nodes_missing_node_details():
 async def test_async_set_param_success():
     class Client:
         async def async_set_params(self, batch):
-            return [{"node_id": batch[0]["node_id"] if False else batch[0]["node_id"], "status": "success"}]
+            return [
+                {
+                    "node_id": batch[0]["node_id"] if False else batch[0]["node_id"],
+                    "status": "success",
+                }
+            ]
 
     api = RainmakerAPI(None, "h", "u", "p")
     api._client = Client()

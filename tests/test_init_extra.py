@@ -1,12 +1,14 @@
 """Tests for integration setup/migration/unload flows."""
 from __future__ import annotations
 
-import pytest
 import importlib
 
-integ = importlib.import_module("custom_components.zehnder_multicontroller")
-from custom_components.zehnder_multicontroller.const import VERSION, DOMAIN
+import pytest
+from custom_components.zehnder_multicontroller.const import DOMAIN
+from custom_components.zehnder_multicontroller.const import VERSION
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+integ = importlib.import_module("custom_components.zehnder_multicontroller")
 
 
 class DummyEntity:
@@ -32,7 +34,9 @@ async def test_async_migrate_entry_removes_climate(monkeypatch):
 
     reg.async_remove = async_remove
 
-    monkeypatch.setattr("homeassistant.helpers.entity_registry.async_get", lambda hass: reg)
+    monkeypatch.setattr(
+        "homeassistant.helpers.entity_registry.async_get", lambda hass: reg
+    )
 
     class DummyHass:
         def __init__(self):
@@ -91,6 +95,7 @@ async def test_async_setup_and_unload(monkeypatch):
     # Prevent migration from touching the real entity registry
     async def _noop_migrate(hass, entry):
         return None
+
     monkeypatch.setattr(integ, "async_migrate_entry", _noop_migrate)
 
     # The async_setup_entry performs local imports; insert fake submodules
@@ -99,7 +104,9 @@ async def test_async_setup_and_unload(monkeypatch):
 
     api_mod = types.ModuleType("custom_components.zehnder_multicontroller.api")
     api_mod.RainmakerAPI = FakeAPI
-    coord_mod = types.ModuleType("custom_components.zehnder_multicontroller.coordinator")
+    coord_mod = types.ModuleType(
+        "custom_components.zehnder_multicontroller.coordinator"
+    )
     coord_mod.RainmakerCoordinator = FakeCoordinator
     sys.modules["custom_components.zehnder_multicontroller.api"] = api_mod
     sys.modules["custom_components.zehnder_multicontroller.coordinator"] = coord_mod
@@ -113,6 +120,7 @@ async def test_async_setup_and_unload(monkeypatch):
             return None
 
     hass = DummyHass()
+
     # stub config_entries behaviors used in async_setup_entry/unload
     async def _forward(entry, platforms):
         return None
@@ -124,7 +132,9 @@ async def test_async_setup_and_unload(monkeypatch):
     hass.config_entries.async_unload_platforms = _unload
 
     # include integration_version so migration is skipped inside setup
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "h", "integration_version": VERSION}, entry_id="e1")
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "h", "integration_version": VERSION}, entry_id="e1"
+    )
 
     result = await integ.async_setup_entry(hass, entry)
     assert result is True

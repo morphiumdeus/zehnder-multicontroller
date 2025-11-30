@@ -49,7 +49,7 @@ class RainmakerParamNumber(CoordinatorEntity, NumberEntity):
     def unique_id(self) -> str | None:
         return self._unique_id
 
-    @cached_property
+    @property
     def native_value(self) -> float | None:
         params = self.coordinator.data.get(self._node_id, {})
         return params.get(self._param, {}).get("value")

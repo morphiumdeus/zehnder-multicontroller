@@ -11,12 +11,16 @@ async def test_sensor_setup_and_attributes(DummyCoordinator):
             "humidity": {"value": 55, "data_type": "int"},
             "config": {"value": {}},
             "schedule_week": {"value": {}},
-            "writable_bool": {"value": True, "data_type": "bool", "properties": ["write"]},
+            "writable_bool": {
+                "value": True,
+                "data_type": "bool",
+                "properties": ["write"],
+            },
         }
     }
     coord = DummyCoordinator(data)
 
-    from custom_components.zehnder_multicontroller.sensor import async_setup_entry, RainmakerParamSensor
+    from custom_components.zehnder_multicontroller.sensor import async_setup_entry
 
     added = []
 
@@ -84,7 +88,9 @@ async def test_sensor_excludes_bool_and_none_value(DummyCoordinator):
 
 @pytest.mark.asyncio
 async def test_sensor_device_info_and_unique_id(DummyCoordinator):
-    data = {"node": {"Name": {"value": "N"}, "param1": {"value": 1, "data_type": "float"}}}
+    data = {
+        "node": {"Name": {"value": "N"}, "param1": {"value": 1, "data_type": "float"}}
+    }
     coord = DummyCoordinator(data)
 
     from custom_components.zehnder_multicontroller.sensor import async_setup_entry

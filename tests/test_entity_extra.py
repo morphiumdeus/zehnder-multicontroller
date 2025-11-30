@@ -1,7 +1,9 @@
 """Tests for ZehnderMulticontrollerEntity helpers."""
 from __future__ import annotations
 
-from custom_components.zehnder_multicontroller.entity import ZehnderMulticontrollerEntity
+from custom_components.zehnder_multicontroller.entity import (
+    ZehnderMulticontrollerEntity,
+)
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
@@ -14,7 +16,10 @@ def test_entity_properties(DummyCoordinator):
     assert ent.unique_id == entry.entry_id
 
     dev = ent.device_info
-    assert ("zehnder_multicontroller", entry.entry_id) in dev["identifiers"] or ("zehnder_multicontroller", entry.entry_id) in dev.identifiers
+    assert ("zehnder_multicontroller", entry.entry_id) in dev["identifiers"] or (
+        "zehnder_multicontroller",
+        entry.entry_id,
+    ) in dev.identifiers
 
     attrs = ent.device_state_attributes
     assert attrs["integration"] == "zehnder_multicontroller"

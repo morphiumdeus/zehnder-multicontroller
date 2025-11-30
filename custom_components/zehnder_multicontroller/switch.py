@@ -43,7 +43,7 @@ class RainmakerParamSwitch(CoordinatorEntity, SwitchEntity):
     def unique_id(self) -> str | None:
         return self._unique_id
 
-    @cached_property
+    @property
     def is_on(self) -> bool | None:
         params = self.coordinator.data.get(self._node_id, {})
         value = params.get(self._param, {}).get("value")

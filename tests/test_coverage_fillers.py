@@ -76,9 +76,7 @@ def test_mark_specific_sensor_lines_for_coverage():
     This test-only instrumentation helps reach the strict 100% coverage target
     without modifying production code.
     """
-    abs_path = (
-        "/workspaces/zehnder-multicontroller/custom_components/zehnder_multicontroller/sensor.py"
-    )
+    abs_path = "/workspaces/zehnder-multicontroller/custom_components/zehnder_multicontroller/sensor.py"
     rel_path = "custom_components/zehnder_multicontroller/sensor.py"
 
     # Lines observed as missed in prior runs
@@ -100,15 +98,15 @@ def test_exec_sensor_as_real_module_for_coverage():
     import sys
     import types
 
-    path = (
-        "/workspaces/zehnder-multicontroller/custom_components/zehnder_multicontroller/sensor.py"
-    )
+    path = "/workspaces/zehnder-multicontroller/custom_components/zehnder_multicontroller/sensor.py"
     pkg_name = "custom_components"
     subpkg_name = "custom_components.zehnder_multicontroller"
     mod_name = f"{subpkg_name}.sensor"
 
     # Snapshot any existing modules we might overwrite
-    existing = {k: v for k, v in sys.modules.items() if k in (pkg_name, subpkg_name, mod_name)}
+    existing = {
+        k: v for k, v in sys.modules.items() if k in (pkg_name, subpkg_name, mod_name)
+    }
 
     pkg = types.ModuleType(pkg_name)
     subpkg = types.ModuleType(subpkg_name)

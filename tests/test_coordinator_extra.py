@@ -1,9 +1,9 @@
 """Extra tests for coordinator to cover connect and error paths."""
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock
 
+import pytest
 from custom_components.zehnder_multicontroller.coordinator import RainmakerCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
 

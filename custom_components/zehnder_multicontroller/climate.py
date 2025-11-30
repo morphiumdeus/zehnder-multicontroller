@@ -91,7 +91,7 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
             manufacturer="ESP RainMaker",
         )
 
-    @cached_property
+    @property
     def current_temperature(self) -> float | None:
         node_data = self.coordinator.data.get(self._node_id, {})
         for param, meta in node_data.items():
@@ -99,7 +99,7 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
                 return meta.get("value")
         return None
 
-    @cached_property
+    @property
     def target_temperature(self) -> float | None:
         node_data = self.coordinator.data.get(self._node_id, {})
         for param, meta in node_data.items():
@@ -111,7 +111,7 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
     def hvac_modes(self) -> list[HVACMode]:
         return [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF]
 
-    @cached_property
+    @property
     def hvac_mode(self) -> HVACMode | None:
         node_data = self.coordinator.data.get(self._node_id, {})
         season = None
@@ -156,6 +156,9 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
 
     def _handle_coordinator_update(self) -> None:
         try:
+            # Recompute any derived attributes that depend on coordinator data
+            # so they reflect runtime changes (e.g. fan_speed bounds -> names).
+            self._fan_names = self._initialize_fan_names()
             self._attr_supported_features = self.get_supported_features()
         except Exception:  # pragma: no cover - defensive
             _LOGGER.exception(
