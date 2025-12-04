@@ -33,7 +33,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         # Remove ALL climate entities for this integration
         entities_to_remove = []
         for entity in entity_registry.entities.values():
-            if entity.config_entry_id == entry.entry_id and entity.domain == "climate":
+            if entity.config_entry_id == entry.entry_id :
+                #if entity.domain == "climate" or entity not in entry.data:
                 entities_to_remove.append(entity.entity_id)
 
         for entity_id in entities_to_remove:

@@ -11,10 +11,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from .api import RainmakerAPI
-from .api import RainmakerAuthError
-from .api import RainmakerConnectionError
 from .const import DOMAIN
 
 
@@ -32,6 +28,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+    from .api import RainmakerAPI
+
     api = RainmakerAPI(hass, data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
     await api.async_connect()
 
@@ -52,6 +50,8 @@ class ZehnderMulticontrollerFlowHandler(ConfigFlow, domain=DOMAIN):
         errors for authentication or connectivity failures and fall back to a
         generic unknown error for anything else.
         """
+        from .api import RainmakerAuthError
+        from .api import RainmakerConnectionError
 
         errors: dict[str, str] = {}
 

@@ -37,6 +37,8 @@ class RainmakerParamNumber(CoordinatorEntity, NumberEntity):
         self._unique_id = f"{entry_id}_{node_id}_{param}"
         # Set bounds from metadata
         if bounds and isinstance(bounds, dict):
+            if float(bounds.get("min")) == 20.0:
+                bounds["min"] = 18.0  # adjust min temp to 18C
             self._attr_native_min_value = bounds.get("min")
             self._attr_native_max_value = bounds.get("max")
             self._attr_native_step = bounds.get("step", 1)
@@ -57,7 +59,7 @@ class RainmakerParamNumber(CoordinatorEntity, NumberEntity):
     @cached_property
     def device_info(self) -> DeviceInfo | None:
         return DeviceInfo(
-            identifiers={(DOMAIN, self._node_id)},
+            identifiers={(DOMAIN, f"{self._entry_id}_{self._node_id}" )},
             name=self._node_name,
             manufacturer="ESP RainMaker",
         )
