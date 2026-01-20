@@ -19,4 +19,4 @@ PLATFORMS: list[Platform] = [
 ]
 
 # Default polling interval in seconds
-DEFAULT_SCAN_INTERVAL = 30
+DEFAULT_SCAN_INTERVAL = 120
