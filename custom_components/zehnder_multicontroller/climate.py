@@ -184,6 +184,24 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
             return self._fan_names[level]
         return None
 
+    @property
+    def fan_mode_icon(self) -> dict[str, str] | None:
+        """Return a dict of fan mode to icon mappings."""
+        icon_map = {
+            "Away": "mdi:fan-auto",
+            "Low": "mdi:fan-speed-1",
+            "Medium": "mdi:fan-speed-2",
+            "High": "mdi:fan-speed-3",
+        }
+        # Add mappings for numeric modes if they exist
+        for i, name in enumerate(self._fan_names):
+            if name.isdigit() and name not in icon_map:
+                if i == 0:
+                    icon_map[name] = "mdi:fan-auto"
+                else:
+                    icon_map[name] = f"mdi:fan-speed-{min(i, 3)}"
+        return icon_map
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         temperature = kwargs.get("temperature")
         if temperature is None:
