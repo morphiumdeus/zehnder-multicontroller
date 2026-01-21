@@ -6,45 +6,11 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
 from .const import PLATFORMS
-from .const import VERSION
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Remove and recreate climate entities on version changes."""
-    entity_registry = er.async_get(hass)
-
-    # Get the stored version from entry data, default to "0.0.0" if not present
-    stored_version = entry.data.get("integration_version", "0.0.0")
-
-    # Check if migration is needed
-    if stored_version != VERSION:
-        _LOGGER.info(
-            "Version changed from %s to %s, recreating climate entities",
-            stored_version,
-            VERSION,
-        )
-
-        # Remove ALL climate entities for this integration
-        entities_to_remove = []
-        for entity in entity_registry.entities.values():
-            if entity.config_entry_id == entry.entry_id :
-                #if entity.domain == "climate" or entity not in entry.data:
-                entities_to_remove.append(entity.entity_id)
-
-        for entity_id in entities_to_remove:
-            entity_registry.async_remove(entity_id)
-            _LOGGER.debug("Removed climate entity for recreation: %s", entity_id)
-
-        # Update the stored version
-        new_data = {**entry.data, "integration_version": VERSION}
-        hass.config_entries.async_update_entry(entry, data=new_data)
-        _LOGGER.info("Climate entities removed, will be recreated with new version")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -56,9 +22,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "Setting up Zehnder Multicontroller integration for entry %s",
         entry.entry_id,
     )
-
-    # Perform migration if needed
-    await async_migrate_entry(hass, entry)
 
     data = entry.data
     host = data.get("host")
